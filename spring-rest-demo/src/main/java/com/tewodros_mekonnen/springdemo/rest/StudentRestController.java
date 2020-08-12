@@ -5,6 +5,9 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,7 +65,28 @@ public class StudentRestController {
 	public Student getStudent(@PathVariable int studentId) {
 		
 		// here we are just returning the student at an index, later we will use a database
+		// we should add exception handling in-case if we enter a number for studentID that is out of bound...
+		if((studentId >= newStudents.size()) || (studentId < 0)) {
+			throw new StudentNotFoundException("Student id not found! " + studentId);
+		}
+		
+		// otherwise, if all is good return the following...
 		return newStudents.get(studentId);
+	}
+	
+	// when Exception is thrown above, it needs to be handle as follows:
+	@ExceptionHandler
+	public ResponseEntity<StudentErrorResponse> handleException(StudentNotFoundException exc){
+		
+		// create a StudentErrorResponse
+		StudentErrorResponse error = new StudentErrorResponse();
+		
+		error.setStatus(HttpStatus.NOT_FOUND.value());
+		error.setMessage(exc.getMessage());
+		error.setTimeStamp(System.currentTimeMillis()); 
+		
+		// return ResponseEntity
+		return new ResponseEntity<StudentErrorResponse>(error, HttpStatus.NOT_FOUND); 
 	}
 
 }
